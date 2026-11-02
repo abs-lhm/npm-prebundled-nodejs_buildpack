@@ -72,6 +72,21 @@ teardown() {
   [ "$output" = "24.22.1" ]
 }
 
+@test "resolve_node_version: ignores prerelease versions in the index" {
+  run resolve_node_version "22"
+  [ "$status" -eq 0 ]
+  [ "$output" = "22.23.4" ]
+}
+
+@test "resolve_node_version: fails when the release index is not valid JSON" {
+  local bad_index="${BATS_TEST_TMPDIR}/index.json"
+  echo "not json" > "$bad_index"
+  NODE_INDEX_URL="file://${bad_index}"
+  run resolve_node_version "24"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Could not parse"* ]]
+}
+
 @test "resolve_node_version: fails when nothing matches" {
   run resolve_node_version "^19"
   [ "$status" -eq 1 ]
