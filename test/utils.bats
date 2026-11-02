@@ -78,6 +78,24 @@ teardown() {
   [ "$output" = "22.23.4" ]
 }
 
+@test "resolve_node_version: skips index entries without a files array" {
+  local index="${BATS_TEST_TMPDIR}/index.json"
+  echo '[{"version":"v23.0.0","lts":false},{"version":"v22.1.0","files":["linux-x64"],"lts":"Jod"}]' > "$index"
+  NODE_INDEX_URL="file://${index}"
+  run resolve_node_version "22"
+  [ "$status" -eq 0 ]
+  [ "$output" = "22.1.0" ]
+}
+
+@test "resolve_node_version: skips index entries with a non-string version" {
+  local index="${BATS_TEST_TMPDIR}/index.json"
+  echo '[{"version":null,"files":["linux-x64"],"lts":false},{"version":22,"files":["linux-x64"],"lts":false},{"version":"v22.1.0","files":["linux-x64"],"lts":"Jod"}]' > "$index"
+  NODE_INDEX_URL="file://${index}"
+  run resolve_node_version "22"
+  [ "$status" -eq 0 ]
+  [ "$output" = "22.1.0" ]
+}
+
 @test "resolve_node_version: fails when the release index is not valid JSON" {
   local bad_index="${BATS_TEST_TMPDIR}/index.json"
   echo "not json" > "$bad_index"
